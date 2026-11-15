@@ -1,0 +1,24 @@
+name: keepalive
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Ping tactical map health endpoint
+        run: |
+          for i in 1 2 3; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 90 https://tactical-map-server-408s.onrender.com/health || true)
+            echo "attempt $i -> $code"
+            if [ "$code" = "200" ]; then exit 0; fi
+            sleep 10
+          done
+          exit 1
